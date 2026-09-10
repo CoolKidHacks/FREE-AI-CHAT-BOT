@@ -1,43 +1,43 @@
 # Omni — Free AI Chat Bot
 
-A free, multi-model AI chat studio. Talk to **real** Claude Fable, GPT, Grok, Gemini, Kimi, and DeepSeek models — not simulated labels — with **no API key**.
+Talk to **real** Claude Fable, GPT, Grok, Gemini, Kimi, DeepSeek, Qwen, and Mistral in the browser. **No API key.** Sign in with a free [Puter](https://puter.com) account.
 
-Powered by [Puter.js](https://developer.puter.com) (sign in with a free Puter account).
+Each model runs **as itself** (Claude is Claude, Grok is Grok) using distilled vendor system prompts — not a shared Omni persona.
 
-## Go live on GitHub Pages (one-time)
+## Fix the 404 (required, one minute)
 
-GitHub needs you to flip Pages on once:
+GitHub will not publish `*.github.io` until Pages is switched on **by the repo owner**. I cannot do this from an API token.
 
-1. Open **[Settings → Pages](https://github.com/CoolKidHacks/FREE-AI-CHAT-BOT/settings/pages)**
-2. Under **Build and deployment**, set **Source** to **Deploy from a branch**
-3. Branch: **main** · Folder: **/ (root)** · **Save**
+1. Open **[Settings → Pages](https://github.com/CoolKidHacks/FREE-AI-CHAT-BOT/settings/pages)** while logged in as **CoolKidHacks**
+2. **Build and deployment → Source:** `Deploy from a branch`
+3. **Branch:** `main` · **Folder:** `/ (root)`
+4. **Save**
 
-After a minute the app is at:
+Wait ~60 seconds, then hard-refresh:
 
 **https://coolkidhacks.github.io/FREE-AI-CHAT-BOT/**
 
-## How to use
+If GitHub still shows “There isn’t a GitHub Pages site here”, you haven’t clicked Save on that page yet.
 
-1. Open the site.
-2. Click **Sign in free** (Puter popup — allow popups if asked).
-3. Pick a **real model** and effort.
-4. Type a message and press Enter.
+## Use it
 
-Chats stay in this browser (`localStorage`). Nothing is stored on a server we control.
+1. Open the live site (after Pages is on).
+2. Click **Sign in** — allow the Puter popup.
+3. Pick a **verified model**.
+4. Toggle **Think** for slower, more careful answers. Effort: Low → Max.
+5. Type a message, press Enter.
+
+Chats stay in this browser (`localStorage`).
 
 ## Features
 
-- Real streaming replies via `puter.ai.chat()` (each dropdown item is a real Puter-hosted model)
-- Claude Fable 5.1 / 5, Opus, Sonnet, GPT-5.6 Luna, GPT-4o, Grok 4.6, Gemini, Kimi K3, DeepSeek, plus extra models loaded live from Puter
-- Thinking traces and work effort (low → max)
-- Multi-chat sidebar, local history, search, delete
-- Image attach, stop generation, copy, regenerate
-- Dark studio UI that works on phones
-
-## Deploy your own
-
-This is a single-file app. Copy `index.html`, enable GitHub Pages on `main` / root.
+- Streaming `puter.ai.chat()` — every option is a real Puter-hosted model ID
+- Per-model system prompts (Claude Fable 5.1 / Opus / Sonnet, GPT-5.6 Luna/Sol/Terra, Grok 4.6, Gemini, Kimi, DeepSeek, Qwen, Mistral, GLM)
+- Live catalog merge from Puter’s model API
+- Thinking traces + effort control
+- Multi-chat sidebar, search, delete, regenerate, copy, image attach
+- Mobile-first (safe area, 44px targets)
 
 ## Credit
 
-AI runs through [Puter.js](https://developer.puter.com).
+AI runs through [Puter.js](https://developer.puter.com). Model voices distilled from public archives at [asgeirtj/system_prompts_leaks](https://github.com/asgeirtj/system_prompts_leaks) (identity + tone only — no vendor tools).

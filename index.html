@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Omni — Free AI Chat</title>
+  <meta name="description" content="Free multi-model AI chat. Real Claude, GPT, Grok, Gemini via Puter.js — no API keys." />
+  <meta name="theme-color" content="#09090b" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2309090b'/%3E%3Ccircle cx='16' cy='16' r='8' fill='none' stroke='%23b8c4d0' stroke-width='3'/%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet" />
+  <script src="https://js.puter.com/v2/"></script>
+  <style>
+    :root {
+      --bg: #09090b;
+      --surface: #111113;
+      --elevated: #18181b;
+      --fg: #f4f4f5;
+      --muted: #a1a1aa;
+      --subtle: #71717a;
+      --line: #27272a;
+      --primary: #e8eaee;
+      --primary-fg: #09090b;
+      --accent: #b8c4d0;
+      --danger: #e11d48;
+      --ok: #34d399;
+      --radius: 12px;
+      --font: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+      --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font); -webkit-font-smoothing: antialiased; }
+    button, [role="button"] { cursor: pointer; font-family: inherit; }
+    button:disabled { cursor: default; opacity: .4; }
+    button { background: none; border: 0; color: inherit; }
+    a { color: inherit; }
+    #app { display: flex; height: 100dvh; min-height: 0; }
+    .sidebar { width: 18rem; flex-shrink: 0; display: flex; flex-direction: column; background: var(--surface); border-right: 1px solid var(--line); }
+    .brand { display: flex; align-items: center; gap: 10px; padding: 20px 16px 12px; }
+    .mark { width: 32px; height: 32px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 8px; background: var(--elevated); font-family: var(--mono); font-size: 11px; letter-spacing: .18em; }
+    .brand h1 { margin: 0; font-size: 15px; font-weight: 500; }
+    .brand p { margin: 2px 0 0; font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--subtle); }
+    .pad { padding: 0 12px; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 36px; padding: 0 14px; border-radius: 12px; font-size: 13px; font-weight: 500; }
+    .btn-primary { background: var(--primary); color: var(--primary-fg); width: 100%; }
+    .btn-ghost { color: var(--subtle); }
+    .btn-outline { border: 1px solid var(--line); background: var(--elevated); }
+    .search { width: 100%; height: 36px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); padding: 0 12px 0 32px; font: inherit; font-size: 13px; outline: none; }
+    .search-wrap { position: relative; margin: 12px; }
+    .search-wrap svg { position: absolute; left: 10px; top: 10px; color: var(--subtle); }
+    .chats { flex: 1; overflow: auto; padding: 0 8px 12px; }
+    .chat-item { display: flex; align-items: center; gap: 4px; border-radius: 12px; }
+    .chat-item.active { background: var(--elevated); }
+    .chat-item button.title { flex: 1; min-width: 0; text-align: left; padding: 10px 12px; font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .chat-item.active button.title { color: var(--fg); }
+    .chat-item .del { width: 32px; height: 32px; border-radius: 8px; color: var(--subtle); }
+    .chat-item .del:hover { color: var(--danger); }
+    .side-foot { border-top: 1px solid var(--line); padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+    .puter-card { border: 1px solid var(--line); background: var(--bg); border-radius: 12px; padding: 10px 12px; }
+    .puter-card small { font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--subtle); }
+    .puter-card p { margin: 4px 0 8px; font-size: 13px; }
+    .credit { font-size: 11px; color: var(--subtle); padding: 0 4px; }
+    .credit a { text-decoration: underline; text-underline-offset: 2px; }
+    .main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+    header.top { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+    .menu-btn { display: none; width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0; }
+    .tools { display: flex; align-items: center; gap: 6px; min-width: 0; flex: 1; overflow-x: auto; }
+    select.sel { height: 36px; max-width: 11rem; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); padding: 0 10px; font: inherit; font-size: 13px; outline: none; }
+    .think { display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); font-size: 12px; color: var(--muted); white-space: nowrap; }
+    .think input { accent-color: var(--accent); }
+    .connect { height: 32px; padding: 0 12px; border-radius: 12px; background: var(--primary); color: var(--primary-fg); font-size: 12px; font-weight: 500; margin-left: auto; flex-shrink: 0; }
+    .thread { flex: 1; min-height: 0; overflow: auto; }
+    .empty { min-height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 32px 24px; max-width: 32rem; margin: 0 auto; }
+    .empty h2 { margin: 16px 0 8px; font-size: 22px; font-weight: 500; letter-spacing: -.02em; }
+    .empty p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.5; }
+    .prompts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 28px; width: 100%; }
+    .prompts button { text-align: left; min-height: 44px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--muted); font-size: 13px; line-height: 1.35; }
+    .prompts button:hover { background: var(--elevated); color: var(--fg); }
+    .msgs { max-width: 48rem; margin: 0 auto; padding: 32px 20px; display: flex; flex-direction: column; gap: 28px; }
+    .bubble-user { display: flex; justify-content: flex-end; }
+    .bubble-user .body { max-width: 80%; background: var(--elevated); border-radius: 16px 16px 6px 16px; padding: 12px 16px; font-size: 15px; line-height: 1.55; white-space: pre-wrap; }
+    .bubble-ai { display: flex; gap: 12px; }
+    .ai-mark { width: 28px; height: 28px; flex-shrink: 0; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 8px; background: var(--elevated); font-family: var(--mono); font-size: 10px; color: var(--accent); margin-top: 4px; }
+    .ai-body { min-width: 0; flex: 1; max-width: 46rem; }
+    .ai-meta { font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--subtle); margin-bottom: 6px; }
+    .think-box { border: 1px solid var(--line); border-radius: 12px; background: color-mix(in oklab, var(--elevated) 70%, transparent); margin-bottom: 12px; overflow: hidden; }
+    .think-box summary { padding: 8px 12px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); cursor: pointer; }
+    .think-box pre { margin: 0; padding: 8px 12px; border-top: 1px solid var(--line); font-family: var(--mono); font-size: 12px; color: var(--muted); white-space: pre-wrap; max-height: 14rem; overflow: auto; }
+    .md { font-size: 15px; line-height: 1.6; color: color-mix(in oklab, var(--fg) 90%, transparent); }
+    .md pre { background: var(--elevated); border: 1px solid var(--line); border-radius: 12px; padding: 12px; overflow: auto; font-family: var(--mono); font-size: 12.5px; }
+    .md code { font-family: var(--mono); font-size: .85em; background: var(--elevated); padding: 1px 6px; border-radius: 4px; color: var(--accent); }
+    .md pre code { background: none; padding: 0; color: inherit; }
+    .error { display: flex; gap: 8px; border: 1px solid color-mix(in oklab, var(--danger) 30%, transparent); background: color-mix(in oklab, var(--danger) 10%, transparent); border-radius: 12px; padding: 10px 12px; font-size: 14px; white-space: pre-wrap; }
+    .acts { margin-top: 6px; display: flex; gap: 4px; }
+    .acts button { min-width: 44px; height: 32px; border-radius: 8px; color: var(--subtle); font-size: 12px; }
+    .acts button:hover { color: var(--fg); background: var(--elevated); }
+    .composer-wrap { border-top: 1px solid var(--line); padding: 12px 16px max(12px, env(safe-area-inset-bottom)); }
+    .composer { max-width: 48rem; margin: 0 auto; display: flex; align-items: flex-end; gap: 8px; border: 1px solid var(--line); background: var(--surface); border-radius: 16px; padding: 8px 10px; }
+    .composer:focus-within { border-color: color-mix(in oklab, var(--accent) 40%, var(--line)); }
+    textarea { flex: 1; resize: none; border: 0; background: transparent; color: var(--fg); font: inherit; font-size: 14px; line-height: 1.5; max-height: 160px; outline: none; }
+    .icon-btn { width: 36px; height: 36px; border-radius: 12px; display: grid; place-items: center; flex-shrink: 0; color: var(--muted); }
+    .send { background: var(--primary); color: var(--primary-fg); }
+    .stop { background: var(--elevated); color: var(--fg); border: 1px solid var(--line); }
+    .hint { text-align: center; margin: 8px 0 0; font-family: var(--mono); font-size: 10px; letter-spacing: .04em; color: var(--subtle); }
+    .backdrop { display: none; }
+    .modal { display: none; position: fixed; inset: 0; z-index: 60; background: color-mix(in oklab, var(--bg) 80%, transparent); place-items: center; padding: 16px; }
+    .modal.show { display: grid; }
+    .modal .card { width: min(24rem, 100%); background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 20px; }
+    .modal h2 { margin: 0 0 8px; font-size: 16px; font-weight: 500; }
+    .modal p { margin: 0 0 12px; color: var(--muted); font-size: 14px; line-height: 1.5; }
+    puter-dialog { display: none !important; visibility: hidden !important; pointer-events: none !important; }
+    @media (max-width: 768px) {
+      .sidebar { position: fixed; inset: 0 auto 0 0; z-index: 40; transform: translateX(-105%); transition: transform .25s cubic-bezier(.22,1,.36,1); }
+      .sidebar.open { transform: none; }
+      .backdrop { display: block; position: fixed; inset: 0; background: color-mix(in oklab, var(--bg) 70%, transparent); z-index: 30; opacity: 0; pointer-events: none; }
+      .backdrop.show { opacity: 1; pointer-events: auto; }
+      .menu-btn { display: grid; place-items: center; }
+      .connect { display: none; }
+      .prompts { grid-template-columns: 1fr; }
+      select.sel { max-width: 9.5rem; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; animation: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="backdrop" id="backdrop"></div>
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="mark">O</div>
+        <div>
+          <h1>Omni</h1>
+          <p>Free AI studio</p>
+        </div>
+      </div>
+      <div class="pad"><button class="btn btn-primary" id="new-chat">New chat</button></div>
+      <div class="search-wrap">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3-3"/></svg>
+        <input class="search" id="search" placeholder="Search chats" />
+      </div>
+      <div class="chats" id="chat-list"></div>
+      <div class="side-foot">
+        <div class="puter-card">
+          <small>Puter</small>
+          <p id="puter-status">Connecting…</p>
+          <button class="btn btn-outline" id="auth-btn" style="height:32px;font-size:12px">Sign in free</button>
+        </div>
+        <button class="btn btn-ghost" id="clear-all" style="justify-content:flex-start">Clear all chats</button>
+        <div class="credit">Powered by <a href="https://developer.puter.com" target="_blank" rel="noopener">Puter.js</a></div>
+      </div>
+    </aside>
+    <main class="main">
+      <header class="top">
+        <button class="menu-btn" id="menu-btn" aria-label="Open chats">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <div class="tools">
+          <select class="sel" id="model"></select>
+          <select class="sel" id="effort"></select>
+          <label class="think"><input type="checkbox" id="thinking" checked /> Think</label>
+        </div>
+        <button class="connect" id="connect-btn">Sign in</button>
+      </header>
+      <div class="thread" id="thread"></div>
+      <div class="composer-wrap">
+        <div id="preview-img"></div>
+        <form class="composer" id="form">
+          <button type="button" class="icon-btn" id="attach" aria-label="Attach image">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.4 11.6l-9.2 9.2a6 6 0 01-8.5-8.5l9.2-9.2a4 4 0 015.7 5.7L9.4 18.1a2 2 0 01-2.8-2.8l8.5-8.5"/></svg>
+          </button>
+          <input type="file" id="file" accept="image/*" hidden />
+          <textarea id="input" rows="1" placeholder="Message Omni…"></textarea>
+          <button type="submit" class="icon-btn send" id="send" aria-label="Send" disabled>
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+          </button>
+        </form>
+        <p class="hint">Enter to send · Shift+Enter for a new line · Real models via Puter.js</p>
+      </div>
+    </main>
+  </div>
+  <div class="modal" id="popup-modal">
+    <div class="card">
+      <h2>Allow the sign-in popup</h2>
+      <p>Puter opens a small window to sign you in — free, no API key. Your browser blocked it, which is why a blank page appeared before.</p>
+      <p>Allow popups for this site, then try again.</p>
+      <button class="btn btn-primary" id="popup-retry">Try sign-in again</button>
+      <button class="btn btn-ghost" id="popup-close" style="width:100%;margin-top:8px">Close</button>
+    </div>
+  </div>
+  <script>
+  const FEATURED = [
+    { id: "claude-fable-5-1", label: "Claude Fable 5.1" },
+    { id: "claude-fable-5", label: "Claude Fable 5" },
+    { id: "claude-opus-5", label: "Claude Opus 5" },
+    { id: "claude-sonnet-5", label: "Claude Sonnet 5" },
+    { id: "gpt-5.6-luna", label: "GPT-5.6 Luna" },
+    { id: "gpt-5.4", label: "GPT-5.4" },
+    { id: "gpt-4o", label: "GPT-4o" },
+    { id: "gpt-5-nano", label: "GPT-5 Nano" },
+    { id: "grok-4.6", label: "Grok 4.6" },
+    { id: "gemini-3.8-flash", label: "Gemini 3.8 Flash" },
+    { id: "moonshotai/kimi-k3", label: "Kimi K3" },
+    { id: "deepseek-v4-pro", label: "DeepSeek V4 Pro" }
+  ];
+  const SYSTEM = "You are Omni, a capable, precise AI assistant. Be clear, useful, and direct. Use markdown when it helps. Prefer working code and concrete answers over filler.";
+  const EFFORTS = ["low", "medium", "high", "xhigh", "max"];
+  const KEY = "omni-chat-v2";
+  const PROMPTS = [
+    "Explain how a hash map works, with a tiny JS example.",
+    "Draft a weekend itinerary for Tokyo on a modest budget.",
+    "Review this idea: a local-first notes app with CRDTs.",
+    "Write a Python script that watches a folder and logs new files."
+  ];
+
+  const $ = (id) => document.getElementById(id);
+  const uid = (p) => p + "_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  let MODELS = FEATURED.slice();
+  const modelLabel = (id) => (MODELS.find(m => m.id === id) || FEATURED.find(m => m.id === id) || { label: id }).label;
+
+  function blank() {
+    return { id: uid("ses"), title: "New chat", model: "claude-fable-5-1", thinking: true, effort: "high", messages: [], updatedAt: Date.now() };
+  }
+  let state = { sessions: [], activeId: null };
+  try {
+    const raw = JSON.parse(localStorage.getItem(KEY) || localStorage.getItem("omni-chat-v1") || "null");
+    if (raw && Array.isArray(raw.sessions)) state = raw;
+  } catch (e) {}
+  if (!state.sessions.length) {
+    const s = blank();
+    state.sessions = [s];
+    state.activeId = s.id;
+  }
+  if (!state.activeId) state.activeId = state.sessions[0].id;
+
+  function save() {
+    localStorage.setItem(KEY, JSON.stringify({ sessions: state.sessions.slice(0, 80), activeId: state.activeId }));
+  }
+  function current() { return state.sessions.find(s => s.id === state.activeId) || state.sessions[0]; }
+
+  function fillModels() {
+    const sel = $("model");
+    const prev = sel.value || current().model;
+    sel.innerHTML = "";
+    MODELS.forEach(m => {
+      const o = document.createElement("option");
+      o.value = m.id;
+      o.textContent = m.label;
+      sel.appendChild(o);
+    });
+    if ([...sel.options].some(o => o.value === prev)) sel.value = prev;
+  }
+  fillModels();
+  EFFORTS.forEach(e => {
+    const o = document.createElement("option");
+    o.value = e;
+    o.textContent = e === "xhigh" ? "Extra high" : e[0].toUpperCase() + e.slice(1);
+    $("effort").appendChild(o);
+  });
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, c => ({ "&": "&", "<": "<", ">": ">", '"': """, "'": "&#39;" }[c]));
+  }
+  function md(text) {
+    let s = esc(text);
+    s = s.replace(/```([\s\S]*?)```/g, (_, code) => "<pre><code>" + code.trim() + "</code></pre>");
+    s = s.replace(/`([^`]+)`/g, "<code>$1</code>");
+    s = s.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+    s = s.replace(/\n/g, "<br/>");
+    return s;
+  }
+
+  function renderList() {
+    const q = $("search").value.trim().toLowerCase();
+    const list = $("chat-list");
+    list.innerHTML = "";
+    state.sessions.filter(s => !q || s.title.toLowerCase().includes(q)).forEach(s => {
+      const row = document.createElement("div");
+      row.className = "chat-item" + (s.id === state.activeId ? " active" : "");
+      row.innerHTML = "<button class='title'></button><button class='del' aria-label='Delete'>×</button>";
+      row.querySelector(".title").textContent = s.title;
+      row.querySelector(".title").onclick = () => { state.activeId = s.id; save(); closeSide(); render(); };
+      row.querySelector(".del").onclick = () => {
+        state.sessions = state.sessions.filter(x => x.id !== s.id);
+        if (!state.sessions.length) { const n = blank(); state.sessions = [n]; state.activeId = n.id; }
+        else if (state.activeId === s.id) state.activeId = state.sessions[0].id;
+        save(); render();
+      };
+      list.appendChild(row);
+    });
+  }
+
+  function renderThread() {
+    const s = current();
+    const el = $("thread");
+    if (!s.messages.length) {
+      el.innerHTML = "<div class='empty'><div class='mark' style='width:48px;height:48px;border-radius:16px'>O</div><h2>Ready when you are</h2><p>Talking to " + esc(modelLabel(s.model)) + " via Puter. Each option is a real hosted model — sign in free, no API key.</p><div class='prompts' id='prompts'></div></div>";
+      PROMPTS.forEach(p => {
+        const b = document.createElement("button");
+        b.textContent = p;
+        b.onclick = () => send(p);
+        $("prompts").appendChild(b);
+      });
+      return;
+    }
+    el.innerHTML = "<div class='msgs'></div>";
+    const box = el.firstChild;
+    s.messages.forEach((m) => {
+      const lastA = [...s.messages].reverse().find(x => x.role === "assistant");
+      if (m.role === "user") {
+        const d = document.createElement("article");
+        d.className = "bubble-user";
+        d.innerHTML = "<div class='body'></div>";
+        d.firstChild.textContent = m.content;
+        box.appendChild(d);
+      } else {
+        const d = document.createElement("article");
+        d.className = "bubble-ai";
+        const think = (s.thinking && m.reasoning) ? "<div class='think-box'><details open><summary>Thinking</summary><pre>" + esc(m.reasoning) + "</pre></details></div>" : "";
+        const body = m.error ? "<div class='error'>" + esc(m.content) + "</div>" : "<div class='md'>" + md(m.content || (m.streaming ? "Waiting for tokens…" : "")) + "</div>";
+        d.innerHTML = "<div class='ai-mark'>AI</div><div class='ai-body'><div class='ai-meta'>" + esc(modelLabel(m.model || s.model)) + (m.streaming ? " · streaming" : "") + "</div>" + think + body + "<div class='acts'><button data-copy='1'>Copy</button>" + (lastA && lastA.id === m.id && !streaming ? "<button data-regen='1'>Retry</button>" : "") + "</div></div>";
+        d.querySelector("[data-copy]")?.addEventListener("click", () => navigator.clipboard.writeText(m.content || ""));
+        d.querySelector("[data-regen]")?.addEventListener("click", regenerate);
+        box.appendChild(d);
+      }
+    });
+    el.scrollTop = el.scrollHeight;
+  }
+
+  function render() {
+    const s = current();
+    if ([...$("model").options].some(o => o.value === s.model)) $("model").value = s.model;
+    $("effort").value = s.effort;
+    $("thinking").checked = s.thinking;
+    renderList();
+    renderThread();
+    updateSend();
+  }
+
+  function closeSide() { $("sidebar").classList.remove("open"); $("backdrop").classList.remove("show"); }
+  function updateSend() {
+    if (streaming) {
+      $("send").disabled = false;
+      $("send").classList.add("stop");
+      $("send").classList.remove("send");
+      $("send").innerHTML = "<svg width='12' height='12' viewBox='0 0 12 12'><rect width='12' height='12' rx='2' fill='currentColor'/></svg>";
+      $("send").setAttribute("aria-label", "Stop");
+    } else {
+      $("send").disabled = !$("input").value.trim() && !attachment;
+      $("send").classList.add("send");
+      $("send").classList.remove("stop");
+      $("send").innerHTML = "<svg width='16' height='16' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 19V5M5 12l7-7 7 7'/></svg>";
+      $("send").setAttribute("aria-label", "Send");
+    }
+  }
+
+  ["model","effort"].forEach(id => {
+    $(id).onchange = () => {
+      const s = current();
+      s[id] = $(id).value;
+      s.updatedAt = Date.now();
+      save();
+    };
+  });
+  $("thinking").onchange = () => { current().thinking = $("thinking").checked; save(); };
+  $("new-chat").onclick = () => { const s = blank(); state.sessions.unshift(s); state.activeId = s.id; save(); closeSide(); render(); };
+  $("search").oninput = renderList;
+  $("menu-btn").onclick = () => { $("sidebar").classList.add("open"); $("backdrop").classList.add("show"); };
+  $("backdrop").onclick = closeSide;
+  $("clear-all").onclick = () => {
+    if (!confirm("Clear every chat in this browser?")) return;
+    const s = blank(); state.sessions = [s]; state.activeId = s.id; save(); render();
+  };
+
+  let streaming = false;
+  let aborted = false;
+  let attachment = null;
+
+  function effortOpts(effort, thinking) {
+    const o = { stream: true, normalize: true };
+    if (!thinking) o.reasoning_effort = "none";
+    else if (effort === "max") { o.reasoning_effort = "xhigh"; o.verbosity = "high"; }
+    else if (effort === "xhigh") o.reasoning_effort = "xhigh";
+    else o.reasoning_effort = effort;
+    return o;
+  }
+  function extractText(part) {
+    if (!part) return "";
+    if (typeof part === "string") return part;
+    if (typeof part.text === "string") return part.text;
+    if (part.message && typeof part.message.content === "string") return part.message.content;
+    if (typeof part.content === "string") return part.content;
+    return "";
+  }
+  function extractReason(part) {
+    if (!part || typeof part !== "object") return "";
+    if (typeof part.reasoning === "string") return part.reasoning;
+    if (part.message && typeof part.message.reasoning === "string") return part.message.reasoning;
+    return "";
+  }
+
+  async function runAssistant() {
+    const s = current();
+    streaming = true; aborted = false; updateSend();
+    const msg = { id: uid("msg"), role: "assistant", content: "", reasoning: "", createdAt: Date.now(), model: s.model, streaming: true };
+    s.messages.push(msg); save(); render();
+    const sys = SYSTEM + (s.thinking ? "\nWhen helpful, reason carefully. Put the final answer in the user-facing reply." : "\nAnswer directly.");
+    const history = s.messages.filter(m => m.role === "user" || (m.role === "assistant" && m.content && !m.error && m.id !== msg.id)).map(m => ({ role: m.role, content: m.content }));
+    const payload = [{ role: "system", content: sys }, ...history];
+    try {
+      if (!window.puter) throw new Error("Puter.js is not ready yet.");
+      const opts = Object.assign({ model: s.model }, effortOpts(s.effort, s.thinking));
+      const raw = attachment
+        ? await puter.ai.chat(payload, [attachment.dataUrl], false, opts)
+        : await puter.ai.chat(payload, false, opts);
+      let text = "", reason = "";
+      if (raw && typeof raw[Symbol.asyncIterator] === "function") {
+        for await (const part of raw) {
+          if (aborted) break;
+          const t = extractText(part);
+          const r = extractReason(part);
+          if (t) text += t;
+          if (r) reason = r.length >= reason.length ? r : reason + r;
+          msg.content = text; msg.reasoning = reason; renderThread();
+        }
+      } else {
+        text = extractText(raw); reason = extractReason(raw);
+      }
+      msg.content = aborted && !text.trim() ? "Generation stopped." : (text.trim() || "The model returned an empty reply.");
+      msg.reasoning = reason || undefined;
+      msg.streaming = false;
+      if (!text.trim() && !aborted) msg.error = true;
+    } catch (err) {
+      const m = (err && (err.msg || err.message)) || "The model request failed.";
+      msg.content = /sign|auth|login|unauthorized/i.test(String(m))
+        ? String(m) + "\n\nSign in with Puter (free) to run this model. No API key needed."
+        : String(m);
+      msg.error = true;
+      msg.streaming = false;
+    } finally {
+      streaming = false; attachment = null; $("preview-img").innerHTML = "";
+      save(); render();
+    }
+  }
+
+  async function ensureSignedIn() {
+    if (!window.puter) throw new Error("Puter.js is not ready yet.");
+    if (puter.auth.isSignedIn()) return true;
+    return signIn();
+  }
+
+  async function send(text, file) {
+    const t = (text || "").trim();
+    if ((!t && !file) || streaming) return;
+    try { await ensureSignedIn(); } catch (e) { return; }
+    const s = current();
+    if (!s.messages.length) s.title = t.slice(0, 42) || "Image";
+    s.messages.push({ id: uid("msg"), role: "user", content: t || "Describe this image.", createdAt: Date.now() });
+    save(); $("input").value = ""; $("input").style.height = "auto"; render();
+    await runAssistant();
+  }
+  async function regenerate() {
+    const s = current();
+    const last = s.messages[s.messages.length - 1];
+    if (last && last.role === "assistant") s.messages.pop();
+    save(); await runAssistant();
+  }
+
+  $("form").onsubmit = (e) => {
+    e.preventDefault();
+    if (streaming) { aborted = true; return; }
+    send($("input").value, attachment);
+  };
+  $("input").oninput = function () {
+    this.style.height = "auto";
+    this.style.height = Math.min(this.scrollHeight, 160) + "px";
+    updateSend();
+  };
+  $("input").onkeydown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); if (!streaming) send($("input").value, attachment); }
+  };
+  $("attach").onclick = () => $("file").click();
+  $("file").onchange = () => {
+    const f = $("file").files[0]; $("file").value = "";
+    if (!f) return;
+    if (f.size > 4 * 1024 * 1024) { alert("Image is over 4 MB. Try a smaller file."); return; }
+    const r = new FileReader();
+    r.onload = () => {
+      attachment = { name: f.name, dataUrl: String(r.result) };
+      $("preview-img").innerHTML = "<div style='max-width:48rem;margin:0 auto 8px;display:flex;align-items:center;gap:8px'><img src='" + attachment.dataUrl + "' style='height:32px;width:32px;object-fit:cover;border-radius:8px'/><span style='font-size:12px;color:var(--muted)'>" + esc(f.name) + "</span></div>";
+      updateSend();
+    };
+    r.readAsDataURL(f);
+  };
+
+  function killPuterDialogs() {
+    document.querySelectorAll("puter-dialog").forEach((node) => {
+      try { node.shadowRoot?.querySelector("dialog")?.close(); } catch (e) {}
+      node.remove();
+    });
+  }
+  new MutationObserver(killPuterDialogs).observe(document.documentElement, { childList: true, subtree: true });
+
+  function showPopupHelp() { $("popup-modal").classList.add("show"); }
+  function hidePopupHelp() { $("popup-modal").classList.remove("show"); }
+
+  async function signIn() {
+    if (!window.puter) throw new Error("Puter.js is not ready yet.");
+    if (puter.auth.isSignedIn()) { await refreshAuth(); return true; }
+    const origin = puter.defaultGUIOrigin || "https://puter.com";
+    const url = origin + "/action/sign-in?embedded_in_popup=true&msg_id=" + Date.now() + "&attempt_temp_user_creation=true";
+    const popup = window.open(url, "PuterSignIn", "popup=yes,width=480,height=720");
+    if (!popup) { showPopupHelp(); throw new Error("POPUP_BLOCKED"); }
+    hidePopupHelp();
+    return new Promise((resolve, reject) => {
+      let done = false;
+      const finish = (fn) => { if (done) return; done = true; window.removeEventListener("message", onMsg); clearInterval(poll); fn(); };
+      const onMsg = (e) => {
+        const d = e.data;
+        if (!d || typeof d !== "object") return;
+        const token = d.token;
+        if ((d.msg === "puter.token" || d.success) && typeof token === "string") {
+          try { puter.setAuthToken(token); } catch (err) {}
+          try { popup.close(); } catch (err) {}
+          finish(async () => { await refreshAuth(); resolve(true); });
+        }
+      };
+      const poll = setInterval(() => {
+        if (!popup.closed) return;
+        setTimeout(async () => {
+          if (puter.auth.isSignedIn()) finish(async () => { await refreshAuth(); resolve(true); });
+          else finish(() => reject(new Error("Sign-in window closed before finishing.")));
+        }, 250);
+      }, 350);
+      window.addEventListener("message", onMsg);
+    });
+  }
+
+  async function refreshAuth() {
+    const st = $("puter-status");
+    const btn = $("auth-btn");
+    try {
+      if (!window.puter) { st.textContent = "Connecting…"; return; }
+      const on = !!puter.auth.isSignedIn();
+      if (on) {
+        let name = "Signed in";
+        try { const u = await puter.auth.getUser(); if (u && u.username) name = "@" + u.username; } catch (e) {}
+        st.textContent = name;
+        btn.textContent = "Sign out";
+        $("connect-btn").textContent = "Connected";
+      } else {
+        st.textContent = "Not signed in";
+        btn.textContent = "Sign in free";
+        $("connect-btn").textContent = "Sign in";
+      }
+    } catch (e) { st.textContent = "Puter error"; }
+  }
+
+  $("auth-btn").onclick = async () => {
+    if (window.puter && puter.auth.isSignedIn()) { await puter.auth.signOut(); await refreshAuth(); }
+    else { try { await signIn(); } catch (e) {} }
+  };
+  $("connect-btn").onclick = async () => { try { await signIn(); } catch (e) {} };
+  $("popup-retry").onclick = async () => { try { await signIn(); } catch (e) {} };
+  $("popup-close").onclick = hidePopupHelp;
+
+  async function loadLiveModels() {
+    if (!window.puter || !puter.ai.listModels) return;
+    try {
+      const raw = await puter.ai.listModels();
+      const list = Array.isArray(raw) ? raw : [];
+      const live = [];
+      const seen = new Set(FEATURED.map(m => m.id));
+      list.forEach(item => {
+        const id = typeof item === "string" ? item : (item && (item.id || item.name));
+        if (!id || seen.has(id)) return;
+        seen.add(id);
+        const label = (item && item.name && item.name !== id) ? item.name : String(id).split("/").pop();
+        live.push({ id, label });
+      });
+      if (live.length) {
+        MODELS = FEATURED.concat(live.slice(0, 80));
+        fillModels();
+        render();
+      }
+    } catch (e) {}
+  }
+
+  const waitPuter = setInterval(() => {
+    if (window.puter) {
+      clearInterval(waitPuter);
+      refreshAuth();
+      loadLiveModels();
+    }
+  }, 200);
+  render();
+  </script>
+</body>
+</html>

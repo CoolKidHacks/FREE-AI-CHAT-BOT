@@ -1,6 +1,6 @@
 # OMNI-AI — Free AI Chat
 
-Talk to **real** Claude, GPT, Grok, Gemini, Kimi, DeepSeek, Qwen, and more in the browser. Models are the official OpenRouter IDs (`anthropic/claude-fable-5.1`, `openai/gpt-5.6-luna`, `x-ai/grok-4.6`) — not renamed clones.
+Talk to **real** Claude, GPT, Grok, Gemini, Llama, Kimi, DeepSeek, Qwen, Mistral, and more in the browser. Models are official OpenRouter IDs (`anthropic/claude-opus-5`, `openai/gpt-4o`, `openai/gpt-5.6-luna`, `x-ai/grok-4.6`) — not renamed clones.
 
 Tap **Log in** or **Sign up** to connect your OpenRouter account. You are sent to OpenRouter, then returned here. Chat runs as OpenRouter agents on the model you pick — including `:free` models.
 
@@ -32,7 +32,7 @@ Chats stay in this browser (`localStorage`). Your OpenRouter session never leave
 - `:free` models (Gemma 4, GLM 5.2, Nemotron) when you want $0
 - Automatic **reroute** when a flagship model is rate-limited or out of usage (retries on GLM 5.3, GPT-5.6 Luna, or Flash, and labels it in the thread)
 - **Usage meter** from OpenRouter credits
-- Per-model system prompts (Claude Fable 5.1 / Opus / Sonnet, GPT-5.6 Luna/Sol/Terra, Grok 4.6, Gemini, Kimi, DeepSeek, Qwen, GLM)
+- Per-model system prompts (Claude Opus / Sonnet / Haiku, GPT-4o, GPT-5.6 Luna/Sol/Terra, Grok 4.6, Gemini, Llama, Kimi, DeepSeek, Qwen, GLM)
 - Thinking traces + effort control, shown as they stream
 - Syntax-highlighted code, tables, copy / retry
 - Recovers replies that some reasoning models only emit in the thinking channel
